@@ -1,8 +1,14 @@
-import React from 'react'
+import Logout from '../module/auth/components/logout';
+import { requireAuth } from '../module/auth/utils/auth-utils'
 
-const Home = () => {
+const Home = async () => {
+  await requireAuth();
   return (
-    <div>Home</div>
+    <div>
+      <Logout>
+        <button>logout</button>
+      </Logout>
+    </div>
   )
 }
 
