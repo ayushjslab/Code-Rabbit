@@ -73,7 +73,7 @@ const AppSidebar = () => {
 
 
   const isActive = (url: string) =>
-    pathname === url || pathname.startsWith(url + "/");
+    pathname === url;
 
   return (
     <Sidebar className="border-r bg-background">
