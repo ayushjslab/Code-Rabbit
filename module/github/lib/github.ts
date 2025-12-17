@@ -31,7 +31,7 @@ export async function fetchUserContribution(token: string, username: string) {
   const query = `
         query($username: String!){
             user(login: $username) {
-                contributionCollection {
+                contributionsCollection {
                     contributionCalendar{
                         totalContributions 
                         weeks {
@@ -46,15 +46,14 @@ export async function fetchUserContribution(token: string, username: string) {
             }
         }
     `;
-
-
   try {
     const response: any = await octokit.graphql(query, {
       username,
     });
 
-    return response.user.contributionCollection.contributionCalendar;
+    return response.user.contributionsCollection.contributionCalendar;
   } catch (error) {
     console.log(error);
+    return null
   }
 }
