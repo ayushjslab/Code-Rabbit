@@ -1,0 +1,21 @@
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const event = req.headers.get("x-github-event");
+
+    if (event === "ping") {
+      return NextResponse.json({ message: "Pong" }, { status: 200 });
+    }
+    //TODO Handle later
+
+    return NextResponse.json({ message: "Event Processes" }, { status: 200 });
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
+  }
+}

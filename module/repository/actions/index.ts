@@ -2,7 +2,7 @@
 
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
-import { getRepositories } from "@/module/github/lib/github";
+import { createWebhook, getRepositories } from "@/module/github/lib/github";
 import { headers } from "next/headers";
 
 export const fetchRepositories = async (
@@ -24,10 +24,46 @@ export const fetchRepositories = async (
     },
   });
 
-  const connectedRepoIds = new Set(dbRepos.map((repo => repo.githubId)))
+  const connectedRepoIds = new Set(dbRepos.map((repo) => repo.githubId));
 
   return githubRepos.map((repo: any) => ({
     ...repo,
-    isConnected: connectedRepoIds.has(BigInt(repo.id))
-  }))
+    isConnected: connectedRepoIds.has(BigInt(repo.id)),
+  }));
+};
+
+export const connectRepository = async (
+  owner: string,
+  repo: string,
+  githubId: number
+) => {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
+  if (!session?.user) {
+    throw new Error("unauthorized");
+  }
+
+  // TODO: Check if user can connect more repo
+
+  const webhook = await createWebhook(owner, repo)
+
+  if(webhook){
+    await prisma.repository.create({
+        data: {
+            githubId: BigInt(githubId),
+            name: repo,
+            owner,
+            fullName: `${owner}/${repo}`,
+            url: `https://github.com/${owner}/${repo}`,
+            userId: session.user.id
+        }
+    })
+  }
+
+  // TODO: Increment repo count for track usage
+
+  // Todo: Trigger repo indexing for RAG(Fire and forget)
+
+  return webhook
 };

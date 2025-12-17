@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { RepositoryListSkeleton } from "@/module/repository/components/repository-list-skeleton";
+import { useConnectRepository } from "@/module/repository/hooks/use-connect-repository";
 import { useRepositories } from "@/module/repository/hooks/use-repositories";
 import { ExternalLink, Search, Star } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -36,6 +37,8 @@ const RepositoryPage = () => {
     hasNextPage,
     isFetchingNextPage,
   } = useRepositories();
+
+  const { mutate: connectRepo } = useConnectRepository();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [localConnectingId, setLocalConnectingId] = useState<number | null>(
@@ -79,7 +82,19 @@ const RepositoryPage = () => {
     );
   }, [allRepositories, searchQuery]);
 
-  const handleConnect = (rep0: any) => {};
+  const handleConnect = (repo: Repository) => {
+    setLocalConnectingId(repo.id);
+    connectRepo(
+      {
+        owner: repo.full_name.split("/")[0],
+        repo: repo.name,
+        githubId: repo.id,
+      },
+      {
+        onSettled: () => setLocalConnectingId(null),
+      }
+    );
+  };
 
   if (isLoading) {
     return <div className="text-muted-foreground">Loading repositories…</div>;
@@ -170,7 +185,16 @@ const RepositoryPage = () => {
                     </a>
                   </Button>
 
-                  <Button>{repo.isConnected ? "Disconnect" : "Connect"}</Button>
+                  <Button
+                    onClick={() => handleConnect(repo)}
+                    disabled={localConnectingId === repo.id || repo.isConnected}
+                  >
+                    {localConnectingId === repo.id
+                      ? "Connecting..."
+                      : repo.isConnected
+                      ? "Connected"
+                      : "Connect"}
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -178,10 +202,7 @@ const RepositoryPage = () => {
             <CardContent />
           </Card>
         ))}
-        <div
-          ref={observerTarget}
-          className="h-4 w-full"
-        >
+        <div ref={observerTarget} className="h-4 w-full">
           {isFetchingNextPage && <RepositoryListSkeleton />}
           {!hasNextPage && allRepositories.length > 0 && (
             <p className="text-sm text-muted-foreground">
