@@ -1,5 +1,6 @@
 "use server";
 
+import { inngest } from "@/inngest/client";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { createWebhook, getRepositories } from "@/module/github/lib/github";
@@ -63,7 +64,19 @@ export const connectRepository = async (
 
   // TODO: Increment repo count for track usage
 
-  // Todo: Trigger repo indexing for RAG(Fire and forget)
+  try {
+    await inngest.send({
+      name: "repository.connected",
+      data: {
+        owner,
+        repo,
+        userId: session.user.id
+      }
+    })
+  } catch (error) {
+    console.log(error)
+  }
 
   return webhook
 };
+
