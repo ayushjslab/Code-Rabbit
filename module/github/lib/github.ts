@@ -153,12 +153,19 @@ export async function getRepoFileContents(
   if (!Array.isArray(data)) {
     // It's a file
     if (data.type === "file" && data.content) {
-      return [
-        {
-          path: data.path,
-          content: Buffer.from(data.content, "base64").toString("utf-8"),
-        },
-      ];
+      // Apply the same binary file filter here
+      if (
+        !data.path.match(
+          /\.(png|jpg|jpeg|gif|svg|ico|pdf|zip|tar|gz|webp|mp4|woff2?|exe|wasm|lock)$/i
+        )
+      ) {
+        return [
+          {
+            path: data.path,
+            content: Buffer.from(data.content, "base64").toString("utf-8"),
+          },
+        ];
+      }
     }
     return [];
   }
@@ -167,21 +174,22 @@ export async function getRepoFileContents(
 
   for (const item of data) {
     if (item.type === "file") {
-      const { data: fileData } = await octokit.rest.repos.getContent({
-        owner,
-        repo,
-        path: item.path,
-      });
-
+      // Check binary file filter before fetching content
       if (
-        !Array.isArray(fileData) &&
-        fileData.type === "file" &&
-        fileData.content
+        !item.path.match(
+          /\.(png|jpg|jpeg|gif|svg|ico|pdf|zip|tar|gz|webp|mp4|woff2?|exe|wasm|lock)$/i
+        )
       ) {
+        const { data: fileData } = await octokit.rest.repos.getContent({
+          owner,
+          repo,
+          path: item.path,
+        });
+
         if (
-          !item.path.match(
-            /\.(png|jpg|jpeg|gif|svg|ico|pdf|zip|tar|gz|webp|mp4|woff2?|exe|wasm|lock)$/i
-          )
+          !Array.isArray(fileData) &&
+          fileData.type === "file" &&
+          fileData.content
         ) {
           files.push({
             path: item.path,
