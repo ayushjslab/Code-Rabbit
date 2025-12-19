@@ -4,6 +4,7 @@ import { inngest } from "@/inngest/client";
 import { auth } from "@/lib/auth";
 import prisma from "@/lib/db";
 import { createWebhook, getRepositories } from "@/module/github/lib/github";
+import { canConnectRepository, incrementRepositoryCount } from "@/module/payment/lib/subscription";
 import { headers } from "next/headers";
 
 export const fetchRepositories = async (
@@ -47,36 +48,42 @@ export const connectRepository = async (
 
   // TODO: Check if user can connect more repo
 
-  const webhook = await createWebhook(owner, repo)
+  const canConnect = await canConnectRepository(session.user.id);
+  if (!canConnect) {
+    throw new Error(
+      `Repository limit reached. Please upgrade to Pro for unlimited repositories.`
+    );
+  }
 
-  if(webhook){
+  const webhook = await createWebhook(owner, repo);
+
+  if (webhook) {
     await prisma.repository.create({
-        data: {
-            githubId: BigInt(githubId),
-            name: repo,
-            owner,
-            fullName: `${owner}/${repo}`,
-            url: `https://github.com/${owner}/${repo}`,
-            userId: session.user.id
-        }
-    })
-  }
-
-  // TODO: Increment repo count for track usage
-
-  try {
-    await inngest.send({
-      name: "repository.connected",
       data: {
+        githubId: BigInt(githubId),
+        name: repo,
         owner,
-        repo,
-        userId: session.user.id
-      }
-    })
-  } catch (error) {
-    console.log(error)
+        fullName: `${owner}/${repo}`,
+        url: `https://github.com/${owner}/${repo}`,
+        userId: session.user.id,
+      },
+    });
+
+    await incrementRepositoryCount(session.user.id)
+
+    try {
+      await inngest.send({
+        name: "repository.connected",
+        data: {
+          owner,
+          repo,
+          userId: session.user.id,
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    }
   }
 
-  return webhook
+  return webhook;
 };
-

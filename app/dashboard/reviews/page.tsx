@@ -20,9 +20,7 @@ const ReviewsPage = () => {
       <div className="flex h-screen items-center justify-center bg-neutral-950">
         <div className="flex flex-col items-center gap-3">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-rose-900 border-t-rose-500"></div>
-          <p className="text-sm font-medium text-rose-400">
-            Loading reviews…
-          </p>
+          <p className="text-sm font-medium text-rose-400">Loading reviews…</p>
         </div>
       </div>
     );
@@ -92,7 +90,7 @@ const ReviewsPage = () => {
                   <CardHeader className="border-b border-neutral-800 bg-linear-to-r from-rose-950/40 to-transparent pb-4">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex items-center gap-2 text-sm font-medium text-rose-400">
-                       <Github/>
+                        <Github />
                         <span className="truncate">
                           {review.repository?.fullName}
                         </span>
