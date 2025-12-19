@@ -9,7 +9,10 @@ import {
   usage,
   webhooks,
 } from "@polar-sh/better-auth";
-import { updatePolarCustomerId, updateUserTier } from "@/module/payment/lib/subscription";
+import {
+  updatePolarCustomerId,
+  updateUserTier,
+} from "@/module/payment/lib/subscription";
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
     provider: "sqlite",
@@ -21,6 +24,10 @@ export const auth = betterAuth({
       scope: ["repo"],
     },
   },
+  trustedOrigins: [
+    "http://localhost:3000",
+    "https://sizable-jess-nonspaciously.ngrok-free.dev",
+  ],
   plugins: [
     polar({
       client: polarClient,
@@ -33,7 +40,7 @@ export const auth = betterAuth({
               slug: "CodeRabbit", // Custom slug for easy reference in Checkout URL, e.g. /checkout/CodeRabbit
             },
           ],
-          successUrl: process.env.POLAR_SUCCESS_URL,
+          successUrl: process.env.POLAR_SUCCESS_URL || '/dashboard/subscription?success=true',
           authenticatedUsersOnly: true,
         }),
         portal({
@@ -95,8 +102,8 @@ export const auth = betterAuth({
               },
             });
 
-            if(user) {
-              await updatePolarCustomerId(user.id, payload.data.id)
+            if (user) {
+              await updatePolarCustomerId(user.id, payload.data.id);
             }
           },
         }),
