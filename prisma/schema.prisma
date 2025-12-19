@@ -12,19 +12,22 @@ model Test {
 }
 
 model User {
-  id                 String       @id
-  name               String
-  email              String
-  emailVerified      Boolean      @default(false)
-  image              String?
-  createdAt          DateTime     @default(now())
-  updatedAt          DateTime     @updatedAt
-  sessions           Session[]
-  accounts           Account[]
-  repositories       Repository[]
-  usage              UserUsage?
-  subscriptionTier   String       @default("FREE")
-  subscriptionStatus String?
+  id                  String       @id
+  name                String
+  email               String
+  emailVerified       Boolean      @default(false)
+  image               String?
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  sessions            Session[]
+  accounts            Account[]
+  repositories        Repository[]
+  usage               UserUsage?
+  subscriptionTier    String       @default("FREE")
+  subscriptionStatus  String?
+  polarCustomerId     String?      @unique
+  polarSubscriptionId String?      @unique
+
   @@unique([email])
   @@map("user")
 }
